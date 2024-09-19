@@ -5,6 +5,7 @@ services:
     network_mode: host
     volumes:
       - ./:/shaffra-skill-assessment
+      - ./.mod:/go/pkg/mod
     container_name: shaffra-skill-assessment-task-2
     working_dir: /shaffra-skill-assessment
 
