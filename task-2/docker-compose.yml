@@ -1,0 +1,21 @@
+services:
+  shaffra-skill-assessment:
+    image: golang:1.23
+    tty: true
+    network_mode: host
+    volumes:
+      - ./:/shaffra-skill-assessment
+    container_name: shaffra-skill-assessment-task-2
+    working_dir: /shaffra-skill-assessment
+
+  database:
+    image: postgres:16-alpine
+    tty: true
+    network_mode: host
+    environment:
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=test
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
