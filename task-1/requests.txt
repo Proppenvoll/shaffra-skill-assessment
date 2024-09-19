@@ -1,0 +1,7 @@
+curl -X POST -i -d '{"name": "Max Power", "email": "max@power.com", "age": 39}' localhost:8080/users
+
+curl -i localhost:8080/users/1
+
+curl -X PUT -i -d '{"name": "Justin Case", "email": "another@address.com", "age": 33}' localhost:8080/users/1
+
+curl -X DELETE -i localhost:8080/users/2
