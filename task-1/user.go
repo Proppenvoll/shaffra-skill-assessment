@@ -94,10 +94,10 @@ func replaceUser(pathId string, db *sql.DB) func(http.ResponseWriter, *http.Requ
                  VALUES ($1, $2, $3, $4)
 				 ON CONFLICT (app_user_id) DO UPDATE SET
                  name = $2, email = $3, age = $4`,
-			sql.Named("id", user.Id),
-			sql.Named("name", user.Name),
-			sql.Named("email", user.Email),
-			sql.Named("age", user.Age),
+			user.Id,
+			user.Name,
+			user.Email,
+			user.Age,
 		)
 
 		if error != nil {
