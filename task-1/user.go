@@ -1,12 +1,11 @@
 package main
 
 import (
-	"database/sql"
 	"net/http"
 	"strconv"
 )
 
-func createUser(db *sql.DB) func(http.ResponseWriter, *http.Request) {
+func createUser(queryCreateUser queryCreateUser) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, error := decodeJson[UserWithoutId](r.Body)
 
@@ -22,13 +21,7 @@ func createUser(db *sql.DB) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		var userId int
-		error = db.QueryRow(
-			"INSERT INTO app_user (name, email, age) VALUES ($1, $2, $3) RETURNING app_user_id",
-			payload.Name,
-			payload.Email,
-			payload.Age,
-		).Scan(&userId)
+		userId, error := queryCreateUser(*payload)
 
 		if error != nil {
 			status := http.StatusInternalServerError
@@ -36,36 +29,30 @@ func createUser(db *sql.DB) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		endcodeJson(w, struct {
+		error = encodeJson(w, struct {
 			Id int `json:"id"`
 		}{userId})
 	}
 }
 
-func getUser(pathId string, db *sql.DB) func(http.ResponseWriter, *http.Request) {
+func getUser(pathId string, queryGetUser queryGetUser) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue(pathId)
+		user, error := queryGetUser(id)
 
-		var user User
-		error := db.QueryRow(
-			"SELECT * FROM app_user WHERE app_user_id = $1",
-			id,
-		).Scan(
-			&user.Id,
-			&user.Name,
-			&user.Email,
-			&user.Age,
-		)
 		if error != nil {
 			http.Error(w, "user not found", http.StatusNotFound)
 			return
 		}
 
-		endcodeJson(w, user)
+		encodeJson(w, user)
 	}
 }
 
-func replaceUser(pathId string, db *sql.DB) func(http.ResponseWriter, *http.Request) {
+func replaceUser(
+	pathId string,
+	queryReplaceUser queryReplaceUser,
+) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rawId := r.PathValue(pathId)
 		id, error := strconv.Atoi(rawId)
@@ -88,17 +75,7 @@ func replaceUser(pathId string, db *sql.DB) func(http.ResponseWriter, *http.Requ
 		}
 
 		user := User{id, *payload}
-
-		_, error = db.Exec(
-			`INSERT INTO app_user (app_user_id, name, email, age)
-                 VALUES ($1, $2, $3, $4)
-				 ON CONFLICT (app_user_id) DO UPDATE SET
-                 name = $2, email = $3, age = $4`,
-			user.Id,
-			user.Name,
-			user.Email,
-			user.Age,
-		)
+		error = queryReplaceUser(user)
 
 		if error != nil {
 			http.Error(w, error.Error(), http.StatusInternalServerError)
@@ -106,11 +83,13 @@ func replaceUser(pathId string, db *sql.DB) func(http.ResponseWriter, *http.Requ
 	}
 }
 
-func deleteUser(pathId string, db *sql.DB) func(http.ResponseWriter, *http.Request) {
+func deleteUser(
+	pathId string,
+	queryDeleteUser queryDeleteUser,
+) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue(pathId)
-
-		_, error := db.Exec("DELETE FROM app_user WHERE app_user_id = $1", id)
+		error := queryDeleteUser(id)
 
 		if error != nil {
 			http.Error(w, error.Error(), http.StatusInternalServerError)

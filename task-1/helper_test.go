@@ -35,7 +35,7 @@ func TestDecodeJson(t *testing.T) {
 func TestEncodeJson(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	error := endcodeJson(w, struct {
+	error := encodeJson(w, struct {
 		Test int `json:"test"`
 	}{1})
 

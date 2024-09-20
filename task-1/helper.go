@@ -14,7 +14,7 @@ func decodeJson[T any](reader io.Reader) (*T, error) {
 	return result, nil
 }
 
-func endcodeJson(writer http.ResponseWriter, payload any) error {
+func encodeJson(writer http.ResponseWriter, payload any) error {
 	writer.Header().Set("Content-Type", "application/json")
 	if error := json.NewEncoder(writer).Encode(payload); error != nil {
 		return error

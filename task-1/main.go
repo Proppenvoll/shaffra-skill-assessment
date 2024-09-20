@@ -42,22 +42,22 @@ func main() {
 
 	http.HandleFunc(
 		getUsersPattern("POST"),
-		createUser(db),
+		createUser(getQueryCreateUser(db)),
 	)
 
 	http.HandleFunc(
 		getUserByIdPattern("GET", pathId),
-		getUser(pathId, db),
+		getUser(pathId, getQueryGetUser(db)),
 	)
 
 	http.HandleFunc(
 		getUserByIdPattern("PUT", pathId),
-		replaceUser(pathId, db),
+		replaceUser(pathId, getQueryReplaceUser(db)),
 	)
 
 	http.HandleFunc(
 		getUserByIdPattern("DELETE", pathId),
-		deleteUser(pathId, db),
+		deleteUser(pathId, getQueryDeleteUser(db)),
 	)
 
 	serverAddress := ":8080"
