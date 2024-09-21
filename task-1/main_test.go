@@ -1,6 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"regexp"
 	"testing"
 )
 
@@ -38,5 +44,25 @@ func TestGetUserByIdPattern(t *testing.T) {
 		if userByIdPattern != pattern.comparison {
 			t.Errorf(wantGot, pattern.comparison, userByIdPattern)
 		}
+	}
+}
+
+func TestGetLoggingHandler(t *testing.T) {
+	handler := getLoggingHandler(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+	)
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	var logBuffer bytes.Buffer
+	log.SetOutput(&logBuffer)
+	http.Get(server.URL)
+	log.SetOutput(os.Stdout)
+
+	expected := regexp.MustCompile(`\d+\/\d+\/\d+ \d+:\d+:\d+ \w+ \/ took \w*`)
+	result := logBuffer.String()
+
+	if !expected.MatchString(result) {
+		t.Errorf(wantGot, expected.String(), result)
 	}
 }
