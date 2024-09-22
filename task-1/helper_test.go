@@ -9,15 +9,13 @@ import (
 )
 
 func TestDecodeJson(t *testing.T) {
+	type Test struct {
+		Test int `json:"test"`
+	}
+
 	t.Run("returns a result and no error", func(t *testing.T) {
 		reader := strings.NewReader("{\"test\":1}\n")
-
-		type Test struct {
-			Test int `json:"test"`
-		}
-
 		comparison := Test{1}
-
 		result, error := decodeJson[Test](reader)
 
 		if error != nil {
@@ -29,7 +27,18 @@ func TestDecodeJson(t *testing.T) {
 		}
 	})
 
-	t.Run("returns no result and an error", func(t *testing.T) {})
+	t.Run("returns no result and an error", func(t *testing.T) {
+		reader := strings.NewReader("{malformed}\n")
+		result, error := decodeJson[Test](reader)
+
+		if error == nil {
+			t.Errorf(wantGot, nil, error)
+		}
+
+		if result != nil {
+			t.Errorf(wantGot, nil, result)
+		}
+	})
 }
 
 func TestEncodeJson(t *testing.T) {
@@ -53,5 +62,11 @@ func TestEncodeJson(t *testing.T) {
 	expectedJsonString := "{\"test\":1}\n"
 	if jsonString != expectedJsonString {
 		t.Errorf(wantGot, expectedJsonString, jsonString)
+	}
+
+	a := httptest.NewRecorder()
+
+	if error = encodeJson(a, new(complex64)); error == nil {
+		t.Errorf(wantGot, "not nil", error)
 	}
 }
